@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     nes_rom_t *rom = load_nes_rom(argv[1]);
     if (!rom) return 1;
 
-    nes_memory_t *mem = nes_memory_init(rom->prg_rom, rom->prg_rom_bytes);
+    nes_memory_t *mem = nes_memory_init(rom->prg_rom);
     nes_cpu_t *cpu = cpu_init(mem);
 
     printf("\n=== Execução inicial ===\n");
