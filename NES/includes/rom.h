@@ -1,8 +1,13 @@
 #ifndef ROM_H
 #define ROM_H
 
-#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include "rom.h"
+#include "cpu.h"
+#include "memory.h"
+#include "ppu.h"
 
 // Estrutura da ROM NES
 typedef struct {

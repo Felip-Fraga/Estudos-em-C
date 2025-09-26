@@ -25,10 +25,22 @@ typedef struct {
     nes_memory_t *mem;
 } nes_cpu_t;
 
+typedef enum {
+    AM_IMMEDIATE,
+    AM_ZERO_PAGE,
+    AM_ZERO_PAGE_X,
+    AM_ZERO_PAGE_Y,
+    AM_ABSOLUTE,
+    AM_ABSOLUTE_X,
+    AM_ABSOLUTE_Y,
+    AM_INDIRECT_X,
+    AM_INDIRECT_Y
+} AddressingMode;
+
 // === Funções públicas da CPU ===
 nes_cpu_t* cpu_init(nes_memory_t *mem);
 void cpu_reset(nes_cpu_t *cpu);
 void cpu_free(nes_cpu_t *cpu);
-void cpu_step(nes_cpu_t *cpu);
+int cpu_step(nes_cpu_t *cpu, nes_memory_t *mem);
 
 #endif

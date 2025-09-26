@@ -1,6 +1,10 @@
-#include "rom.h"
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "rom.h"
+#include "cpu.h"
+#include "memory.h"
+#include "ppu.h"
 
 // Carrega .nes (formato iNES)
 nes_rom_t* load_nes_rom(const char* filename) {

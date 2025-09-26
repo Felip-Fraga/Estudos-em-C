@@ -1,40 +1,32 @@
 #include "memory.h"
-#include "ppu.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-// ===== Inicialização e liberação =====
+// ==== Inicialização e liberação ====
 nes_memory_t* memory_init(uint8_t *prg_rom) {
     nes_memory_t *mem = calloc(1, sizeof(nes_memory_t));
     if (!mem) return NULL;
     
     mem->prg_rom = prg_rom;
-    mem->ppu = ppu_init();
-    
-    if (!mem->ppu) {
-        free(mem);
-        return NULL;
-    }
     
     return mem;
 }
 
 void memory_free(nes_memory_t *mem) {
     if (!mem) return;
-    
-    ppu_free(mem->ppu);
     free(mem);
 }
 
-// ===== Leitura de memória =====
-uint8_t cpu_read(nes_memory_t *mem, uint16_t addr) {
+// ==== Leitura de memória ====
+uint8_t memory_read(nes_memory_t *mem, uint16_t addr) {
     if (addr < 0x2000) {
         // RAM (espelhada a cada 0x800 bytes)
         return mem->ram[addr % 0x0800];
     }
     else if (addr >= 0x2000 && addr <= 0x3FFF) {
-        // PPU registers (espelhados a cada 8 bytes)
-        return ppu_read(mem->ppu, 0x2000 + (addr % 8));
+        // PPU registers (stub por enquanto)
+        printf("[MMU] PPU read $%04X (não implementado)\n", addr);
+        return 0;
     }
     else if (addr >= 0x4000 && addr <= 0x4017) {
         // APU/Input registers (stub por enquanto)
@@ -54,15 +46,15 @@ uint8_t cpu_read(nes_memory_t *mem, uint16_t addr) {
     }
 }
 
-// ===== Escrita de memória =====
-void cpu_write(nes_memory_t *mem, uint16_t addr, uint8_t value) {
+// ==== Escrita de memória ====
+void memory_write(nes_memory_t *mem, uint16_t addr, uint8_t value) {
     if (addr < 0x2000) {
         // RAM (espelhada a cada 0x800 bytes)
         mem->ram[addr % 0x0800] = value;
     }
     else if (addr >= 0x2000 && addr <= 0x3FFF) {
-        // PPU registers (espelhados a cada 8 bytes)
-        ppu_write(mem->ppu, 0x2000 + (addr % 8), value);
+        // PPU registers (stub por enquanto)
+        printf("[MMU] PPU write $%04X = %02X (não implementado)\n", addr, value);
     }
     else if (addr >= 0x4000 && addr <= 0x4017) {
         // APU/Input registers (stub por enquanto)
@@ -86,7 +78,7 @@ void cpu_write(nes_memory_t *mem, uint16_t addr, uint8_t value) {
     }
 }
 
-// ===== Aliases para compatibilidade =====
+// ==== Aliases para compatibilidade ====
 nes_memory_t* nes_memory_init(uint8_t *prg_rom) {
     return memory_init(prg_rom);
 }
