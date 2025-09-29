@@ -1,0 +1,8 @@
+// MINGW64
+cd /c/ADVPL/Estudos-em-C/NES
+
+// COMPILACAO
+gcc -Iinclude src/main.c src/cpu.c src/memory.c src/rom.c src/ppu.c src/cpu_ops.c src/cpu_instructions.c -o builds/nes_emulator -lmingw32 -lSDL2main -lSDL2
+
+// EXECUÇÃO
+builds/nes_emulator games/marios_bros.nes

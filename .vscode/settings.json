@@ -1,5 +1,14 @@
 {
     "files.associations": {
-        "stdint.h": "c"
-    }
+        "*.c": "c",
+        "*.h": "c"
+    },
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/include",
+        "C:/msys64/mingw64/include",
+        "C:/msys64/mingw64/include/SDL2"
+    ],
+    "C_Cpp.default.compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "C_Cpp.errorSquiggles": "enabled"
 }

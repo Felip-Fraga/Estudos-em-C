@@ -1,47 +1,69 @@
-#include "memory.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include "memory.h"
+#include "ppu.h"
 
 // ==== Inicialização e liberação ====
-nes_memory_t* memory_init(uint8_t *prg_rom) {
+nes_memory_t* memory_init(nes_rom_t *rom) {
     nes_memory_t *mem = calloc(1, sizeof(nes_memory_t));
     if (!mem) return NULL;
-    
-    mem->prg_rom = prg_rom;
-    
+
+    mem->rom = rom;              // referência à ROM completa
+    mem->prg_rom = rom->prg_rom; // ponteiro para PRG-ROM
+    mem->ppu = ppu_init(rom);    // inicializa PPU
+
+    if (!mem->ppu) {
+        free(mem);
+        return NULL;
+    }
+
+    // Zera RAM interna
+    memset(mem->ram, 0, sizeof(mem->ram));
+
     return mem;
 }
 
 void memory_free(nes_memory_t *mem) {
     if (!mem) return;
+    if (mem->ppu) ppu_free(mem->ppu);
     free(mem);
 }
 
 // ==== Leitura de memória ====
 uint8_t memory_read(nes_memory_t *mem, uint16_t addr) {
     if (addr < 0x2000) {
-        // RAM (espelhada a cada 0x800 bytes)
-        return mem->ram[addr % 0x0800];
+        // RAM interna (espelhada a cada 0x800 bytes)
+        return mem->ram[addr % 0x800];
     }
     else if (addr >= 0x2000 && addr <= 0x3FFF) {
-        // PPU registers (stub por enquanto)
-        printf("[MMU] PPU read $%04X (não implementado)\n", addr);
-        return 0;
+        // PPU registers (espelhados a cada 8 bytes)
+        return ppu_read(mem->ppu, 0x2000 + (addr % 8));
     }
     else if (addr >= 0x4000 && addr <= 0x4017) {
-        // APU/Input registers (stub por enquanto)
+        // APU/Input registers (stub)
         return 0;
     }
     else if (addr >= 0x4020 && addr <= 0x7FFF) {
-        // Expansion ROM (não usado na maioria dos jogos)
+        // Expansion ROM (normalmente não usada)
         return 0;
     }
     else if (addr >= 0x8000) {
         // PRG-ROM
-        return mem->prg_rom[addr - 0x8000];
+        if (mem->rom->prg_rom_bytes == 0x4000) {
+            // ROM de 16KB → espelhada (NROM-128)
+            return mem->prg_rom[(addr - 0x8000) % 0x4000];
+        } else if (mem->rom->prg_rom_bytes == 0x8000) {
+            // ROM de 32KB → direto
+            return mem->prg_rom[addr - 0x8000];
+        } else {
+            printf("[MMU] Tamanho PRG-ROM inesperado: %zu bytes\n", mem->rom->prg_rom_bytes);
+            return 0;
+        }
     }
     else {
-        // Área não mapeada
+        // Não mapeado
         return 0;
     }
 }
@@ -49,40 +71,28 @@ uint8_t memory_read(nes_memory_t *mem, uint16_t addr) {
 // ==== Escrita de memória ====
 void memory_write(nes_memory_t *mem, uint16_t addr, uint8_t value) {
     if (addr < 0x2000) {
-        // RAM (espelhada a cada 0x800 bytes)
-        mem->ram[addr % 0x0800] = value;
+        // RAM interna (espelhada a cada 0x800 bytes)
+        mem->ram[addr % 0x800] = value;
     }
     else if (addr >= 0x2000 && addr <= 0x3FFF) {
-        // PPU registers (stub por enquanto)
-        printf("[MMU] PPU write $%04X = %02X (não implementado)\n", addr, value);
+        // PPU (espelhada a cada 8 registradores)
+        ppu_write(mem->ppu, 0x2000 + (addr % 8), value);
     }
     else if (addr >= 0x4000 && addr <= 0x4017) {
-        // APU/Input registers (stub por enquanto)
         if (addr == 0x4014) {
-            // DMA transfer (por enquanto só ignora)
-            printf("[MMU] DMA transfer solicitado: $%02X00\n", value);
+            // DMA OAM
+            printf("[MMU] DMA $%02X00 solicitado\n", value);
         }
-        // Outros registradores APU são ignorados por enquanto
     }
     else if (addr >= 0x4020 && addr <= 0x7FFF) {
-        // Expansion ROM (não usado na maioria dos jogos)
-        printf("[MMU] Write em Expansion ROM $%04X = %02X (ignorado)\n", addr, value);
+        // Expansion ROM
+        printf("[MMU] Write Expansion $%04X=%02X (ignorado)\n", addr, value);
     }
     else if (addr >= 0x8000) {
-        // Tentativa de escrita em ROM
-        printf("[MMU] Tentativa de escrita em ROM $%04X = %02X (ignorado)\n", addr, value);
+        // PRG-ROM é somente leitura
+        printf("[MMU] Tentativa de escrita na ROM $%04X=%02X (ignorado)\n", addr, value);
     }
     else {
-        // Área não mapeada
-        printf("[MMU] Write em área não mapeada $%04X = %02X\n", addr, value);
+        printf("[MMU] Escrita em área não mapeada $%04X=%02X\n", addr, value);
     }
-}
-
-// ==== Aliases para compatibilidade ====
-nes_memory_t* nes_memory_init(uint8_t *prg_rom) {
-    return memory_init(prg_rom);
-}
-
-void nes_memory_free(nes_memory_t *mem) {
-    memory_free(mem);
 }

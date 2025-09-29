@@ -1,16 +1,12 @@
 #ifndef ROM_H
 #define ROM_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include "rom.h"
-#include "cpu.h"
-#include "memory.h"
-#include "ppu.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 // Estrutura da ROM NES
-typedef struct {
+typedef struct nes_rom_t {
     uint8_t prg_rom_size;
     uint8_t chr_rom_size;
     uint8_t mapper_number;
